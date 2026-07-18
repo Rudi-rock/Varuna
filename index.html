@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VARUNA — Autonomous Flood Intelligence UAV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#070a0e;
+    --bg-panel:#0d131a;
+    --bg-panel-raised:#131b24;
+    --line:#1d2733;
+    --line-bright:#2c3b4c;
+    --water:#2f6690;
+    --water-bright:#6badd6;
+    --thermal:#ff6a3d;
+    --thermal-dim:#9c3f22;
+    --verified:#3ddc84;
+    --text-primary:#edf2f6;
+    --text-secondary:#8695a7;
+    --text-tertiary:#4d5966;
+
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background:var(--bg-deep);
+    color:var(--text-primary);
+    font-family:var(--font-body);
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--thermal); color:#0a0a0a; }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; }
+  @media (max-width:640px){ .wrap{ padding:0 20px; } }
+
+  a{ color:inherit; }
+  .mono{ font-family:var(--font-mono); }
+  .display{ font-family:var(--font-display); }
+
+  section{ position:relative; }
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--thermal);
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:16px;
+  }
+  .eyebrow::before{
+    content:''; width:16px; height:1px; background:var(--thermal);
+  }
+
+  h2.section-title{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(28px,4vw,42px);
+    letter-spacing:-0.01em;
+    color:var(--text-primary);
+    margin-bottom:14px;
+  }
+  .section-lede{
+    color:var(--text-secondary);
+    font-size:16px;
+    max-width:640px;
+    margin-bottom:48px;
+  }
+
+  /* Focus visibility */
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--water-bright);
+    outline-offset:3px;
+    border-radius:2px;
+  }
+  .skip-link{
+    position:absolute; left:-9999px; top:0; z-index:200;
+    background:var(--thermal); color:#0a0a0a; font-weight:600;
+    padding:12px 18px; border-radius:4px;
+  }
+  .skip-link:focus{ left:20px; top:20px; }
+
+  /* ============ NAV ============ */
+  .nav{
+    position:sticky; top:0; z-index:100;
+    background:rgba(7,10,14,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{ display:flex; align-items:center; justify-content:space-between; padding:16px 0; }
+  .nav-brand{ display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:700; font-size:18px; letter-spacing:0.02em; }
+  .nav-dot{ width:8px; height:8px; border-radius:50%; background:var(--verified); box-shadow:0 0 8px var(--verified); animation:pulse-dot 2.2s ease-in-out infinite; }
+  @keyframes pulse-dot{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+  .nav-links{ display:none; gap:28px; font-size:14px; color:var(--text-secondary); }
+  @media (min-width:800px){ .nav-links{ display:flex; } }
+  .nav-links a{ text-decoration:none; transition:color 0.2s; }
+  .nav-links a:hover{ color:var(--text-primary); }
+  .nav-status{ font-family:var(--font-mono); font-size:11px; color:var(--verified); letter-spacing:0.06em; display:flex; align-items:center; gap:8px; }
+
+  /* ============ HERO ============ */
+  .hero{
+    position:relative;
+    padding:96px 0 80px;
+    overflow:hidden;
+    border-bottom:1px solid var(--line);
+  }
+  .hero-grid-bg{
+    position:absolute; inset:0; opacity:0.5; pointer-events:none;
+  }
+  .hero-content{ position:relative; z-index:2; }
+  .hero-badge{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--font-mono); font-size:11px; letter-spacing:0.1em;
+    color:var(--water-bright);
+    border:1px solid var(--line-bright); border-radius:100px;
+    padding:6px 14px; margin-bottom:28px;
+    text-transform:uppercase;
+  }
+  .hero-title{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(56px, 11vw, 128px);
+    line-height:0.92;
+    letter-spacing:-0.02em;
+    color:var(--text-primary);
+    margin-bottom:22px;
+  }
+  .hero-title .accent{ color:var(--thermal); }
+  .hero-sub{
+    font-size:clamp(16px,2vw,20px);
+    color:var(--text-secondary);
+    max-width:660px;
+    margin-bottom:40px;
+  }
+  .hero-meta{
+    display:flex; flex-wrap:wrap; gap:36px;
+    padding-top:32px; border-top:1px solid var(--line);
+  }
+  .hero-meta-item .label{ font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+  .hero-meta-item .value{ font-size:15px; font-weight:500; color:var(--text-primary); }
+
+  /* ============ STAT GRID ============ */
+  .stat-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:1px;
+    background:var(--line); border:1px solid var(--line);
+    margin-bottom:0;
+  }
+  @media (min-width:760px){ .stat-grid{ grid-template-columns:repeat(4,1fr); } }
+  .stat-cell{ background:var(--bg-panel); padding:28px 24px; }
+  .stat-value{ font-family:var(--font-mono); font-size:clamp(24px,3vw,32px); font-weight:600; color:var(--text-primary); display:flex; align-items:baseline; gap:6px; }
+  .stat-value .unit{ font-size:14px; color:var(--water-bright); font-weight:500; }
+  .stat-label{ font-size:13px; color:var(--text-secondary); margin-top:8px; }
+  .stat-margin{ font-family:var(--font-mono); font-size:11px; color:var(--verified); margin-top:10px; }
+
+  /* ============ SECTION PADDING ============ */
+  .section-pad{ padding:88px 0; border-bottom:1px solid var(--line); }
+
+  /* ============ MISSION CONCEPT ============ */
+  .concept-quote{
+    font-family:var(--font-display);
+    font-size:clamp(22px,2.6vw,30px);
+    line-height:1.42;
+    color:var(--text-primary);
+    max-width:900px;
+    margin-bottom:40px;
+    font-weight:500;
+  }
+  .concept-quote .hl{ color:var(--thermal); }
+  .concept-cols{ display:grid; grid-template-columns:1fr; gap:32px; }
+  @media (min-width:800px){ .concept-cols{ grid-template-columns:1fr 1fr; } }
+  .concept-card{ background:var(--bg-panel); border:1px solid var(--line); border-radius:6px; padding:28px; }
+  .concept-card h3{ font-family:var(--font-display); font-size:17px; margin-bottom:12px; color:var(--water-bright); }
+  .concept-card p{ color:var(--text-secondary); font-size:14.5px; }
+
+  /* ============ DETECTION PIPELINE (signature) ============ */
+  .detect-panel{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .detect-grid{ display:grid; grid-template-columns:1fr; }
+  @media (min-width:860px){ .detect-grid{ grid-template-columns:1.1fr 1fr; } }
+  .detect-visual{
+    position:relative;
+    background:#050708;
+    min-height:340px;
+    border-bottom:1px solid var(--line);
+  }
+  @media (min-width:860px){ .detect-visual{ border-bottom:none; border-right:1px solid var(--line); } }
+  .detect-copy{ padding:36px; }
+  .detect-copy h3{ font-family:var(--font-display); font-size:22px; margin-bottom:14px; }
+  .detect-copy p{ color:var(--text-secondary); font-size:14.5px; margin-bottom:16px; }
+  .detect-copy p:last-child{ margin-bottom:0; }
+  .detect-copy strong{ color:var(--text-primary); font-weight:600; }
+
+  .vote-row{ display:flex; align-items:center; gap:10px; margin-top:22px; font-family:var(--font-mono); font-size:12px; color:var(--text-secondary); }
+  .vote-chip{ padding:4px 10px; border-radius:4px; border:1px solid var(--line-bright); }
+  .vote-chip.pass{ color:var(--verified); border-color:var(--verified); }
+
+  /* ============ TIMELINE ============ */
+  .timeline{ position:relative; padding-left:0; }
+  .timeline-track{ position:relative; border-left:2px solid var(--line-bright); margin-left:6px; }
+  .t-item{ position:relative; padding:0 0 40px 32px; }
+  .t-item:last-child{ padding-bottom:0; }
+  .t-dot{ position:absolute; left:-7px; top:2px; width:12px; height:12px; border-radius:50%; background:var(--bg-deep); border:2px solid var(--thermal); }
+  .t-time{ font-family:var(--font-mono); font-size:12px; color:var(--thermal); letter-spacing:0.05em; margin-bottom:6px; }
+  .t-title{ font-family:var(--font-display); font-size:17px; font-weight:600; margin-bottom:6px; }
+  .t-desc{ color:var(--text-secondary); font-size:14.5px; max-width:640px; }
+
+  /* ============ ARCHITECTURE ============ */
+  .arch-grid{ display:grid; grid-template-columns:1fr; gap:1px; background:var(--line); border:1px solid var(--line); }
+  @media (min-width:760px){ .arch-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (min-width:1100px){ .arch-grid{ grid-template-columns:repeat(3,1fr); } }
+  .arch-cell{ background:var(--bg-panel); padding:26px; }
+  .arch-cell .idx{ font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); margin-bottom:10px; }
+  .arch-cell h4{ font-family:var(--font-display); font-size:16px; margin-bottom:12px; color:var(--water-bright); }
+  .arch-cell ul{ list-style:none; }
+  .arch-cell li{ font-size:13.5px; color:var(--text-secondary); padding:5px 0; border-top:1px solid var(--line); }
+  .arch-cell li:first-child{ border-top:none; padding-top:0; }
+
+  /* ============ CONSTRAINTS ============ */
+  .constraint-list{ display:flex; flex-direction:column; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .c-row{ background:var(--bg-panel); padding:26px 28px; display:grid; grid-template-columns:1fr; gap:16px; }
+  @media (min-width:860px){ .c-row{ grid-template-columns:280px 1fr; } }
+  .c-req{ display:flex; align-items:flex-start; gap:12px; }
+  .c-num{ font-family:var(--font-mono); font-size:12px; color:var(--bg-deep); background:var(--verified); width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:700; margin-top:2px; }
+  .c-req-text{ font-size:14.5px; font-weight:500; color:var(--text-primary); }
+  .c-sol{ font-size:14px; color:var(--text-secondary); }
+  .c-sol strong{ color:var(--text-primary); font-weight:600; }
+
+  /* ============ SIM DATA ============ */
+  .sim-grid{ display:grid; grid-template-columns:1fr; gap:24px; }
+  @media (min-width:800px){ .sim-grid{ grid-template-columns:1fr 1fr; } }
+  .sim-card{ background:var(--bg-panel); border:1px solid var(--line); border-radius:8px; padding:28px; }
+  .sim-card .tag{ font-family:var(--font-mono); font-size:11px; color:var(--thermal); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }
+  .sim-card h4{ font-family:var(--font-display); font-size:18px; margin-bottom:12px; }
+  .sim-card p{ color:var(--text-secondary); font-size:14px; margin-bottom:16px; }
+  .sim-stats{ display:flex; gap:24px; flex-wrap:wrap; padding-top:14px; border-top:1px solid var(--line); }
+  .sim-stat .v{ font-family:var(--font-mono); font-size:19px; color:var(--water-bright); font-weight:600; }
+  .sim-stat .l{ font-size:11.5px; color:var(--text-tertiary); margin-top:2px; }
+
+  /* ============ COST ============ */
+  .cost-hero{ display:flex; flex-wrap:wrap; align-items:baseline; gap:16px; margin-bottom:40px; }
+  .cost-hero .amount{ font-family:var(--font-display); font-size:clamp(48px,6vw,72px); font-weight:700; color:var(--text-primary); }
+  .cost-hero .usd{ font-family:var(--font-mono); font-size:16px; color:var(--text-secondary); }
+  .cost-table{ width:100%; border-collapse:collapse; }
+  .cost-table th{ text-align:left; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); padding:10px 0; border-bottom:1px solid var(--line-bright); font-weight:500; }
+  .cost-table td{ padding:14px 0; border-bottom:1px solid var(--line); font-size:14.5px; }
+  .cost-table td.num{ text-align:right; font-family:var(--font-mono); color:var(--water-bright); }
+  .cost-table td.note{ color:var(--text-secondary); font-size:13px; }
+
+  /* ============ TELEMETRY LOG ============ */
+  .telemetry{
+    background:#050708;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:24px 26px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    line-height:1.9;
+    max-height:280px;
+    overflow-y:auto;
+  }
+  .telemetry .line{ opacity:0; animation:line-in 0.4s ease forwards; white-space:pre-wrap; }
+  @keyframes line-in{ from{ opacity:0; transform:translateY(3px);} to{ opacity:1; transform:translateY(0);} }
+  .telemetry .ok{ color:var(--verified); }
+  .telemetry .warn{ color:var(--thermal); }
+  .telemetry .dim{ color:var(--text-tertiary); }
+
+  /* ============ FOOTER ============ */
+  footer{ padding:56px 0 40px; }
+  .footer-row{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:20px; align-items:center; }
+  .footer-brand{ font-family:var(--font-display); font-weight:700; font-size:16px; }
+  .footer-meta{ font-family:var(--font-mono); font-size:12px; color:var(--text-tertiary); }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to main content</a>
+
+<!-- ============ NAV ============ -->
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <div class="nav-brand"><span class="nav-dot" aria-hidden="true"></span> VARUNA</div>
+    <div class="nav-links">
+      <a href="#concept">Mission</a>
+      <a href="#detection">Detection</a>
+      <a href="#airframe">Airframe</a>
+      <a href="#architecture">Systems</a>
+      <a href="#compliance">Compliance</a>
+      <a href="#cost">Feasibility</a>
+    </div>
+    <div class="nav-status"><span aria-hidden="true">●</span> ZONE C — MISSION READY</div>
+  </div>
+</nav>
+
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <svg class="hero-grid-bg" viewBox="0 0 1200 600" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+          <path d="M60 0H0V60" fill="none" stroke="#16202b" stroke-width="1"/>
+        </pattern>
+        <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#070a0e" stop-opacity="0"/>
+          <stop offset="100%" stop-color="#070a0e" stop-opacity="1"/>
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="600" fill="url(#grid)"/>
+      <rect width="1200" height="600" fill="url(#fade)"/>
+      <path d="M0 420 C 200 380, 300 460, 500 430 S 800 380, 1200 440" stroke="#2f6690" stroke-width="1.5" fill="none" opacity="0.5"/>
+      <path d="M0 470 C 220 440, 340 500, 560 470 S 820 430, 1200 490" stroke="#2f6690" stroke-width="1" fill="none" opacity="0.3"/>
+    </svg>
+
+    <div class="wrap hero-content">
+      <div class="hero-badge">HackShastra · Zone C — Analysis &amp; Reconnaissance</div>
+      <h1 class="hero-title">VARUNA<span class="accent">.</span></h1>
+      <p class="hero-sub">An autonomous multi-agent UAV that surveys flood zones, cross-verifies survivors through fused RGB-thermal imagery, and hands rescue command a geotagged survivor list, Flood Extent Map, and Damage Assessment Report — in one uninterrupted sortie, with no manual piloting.</p>
+
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <div class="label">Team</div>
+          <div class="value">HackShastra</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="label">Lead</div>
+          <div class="value">Rudra Pratap Singh</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="label">Member</div>
+          <div class="value">Himanshu Singh</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="label">Round</div>
+          <div class="value">R2 — Execution-Ready Design</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ STAT STRIP ============ -->
+  <div class="wrap" style="padding-top:0;">
+    <div class="stat-grid" role="list" aria-label="Key mission specifications">
+      <div class="stat-cell" role="listitem">
+        <div class="stat-value">5.0<span class="unit">km²</span></div>
+        <div class="stat-label">Autonomous survey area</div>
+        <div class="stat-margin">50 km transects · 150 m swath</div>
+      </div>
+      <div class="stat-cell" role="listitem">
+        <div class="stat-value">118<span class="unit">min</span></div>
+        <div class="stat-label">Endurance vs. 64-min sortie</div>
+        <div class="stat-margin">1.8× margin over mission time</div>
+      </div>
+      <div class="stat-cell" role="listitem">
+        <div class="stat-value">6.4<span class="unit">kg</span></div>
+        <div class="stat-label">MTOW vs. 7.5 kg structural limit</div>
+        <div class="stat-margin">17% mass contingency</div>
+      </div>
+      <div class="stat-cell" role="listitem">
+        <div class="stat-value">2.05<span class="unit">:1</span></div>
+        <div class="stat-label">Thrust-to-weight, VTOL hover</div>
+        <div class="stat-margin">above ≥2:1 margin standard</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MISSION CONCEPT ============ -->
+  <section id="concept" class="section-pad">
+    <div class="wrap">
+      <div class="eyebrow">Mission Concept</div>
+      <p class="concept-quote">Zone C doesn't need more footage — it needs proof. VARUNA turns <span class="hl">"we have drone footage"</span> into <span class="hl">"here are 3 confirmed survivors at these coordinates"</span>, entirely onboard, in real time.</p>
+
+      <div class="concept-cols">
+        <div class="concept-card">
+          <h3>Core Objective</h3>
+          <p>A VTOL quad-plane surveys 5+ km² autonomously while an onboard AI pipeline converts raw aerial footage directly into actionable rescue intelligence — not a dataset for someone else to process later.</p>
+        </div>
+        <div class="concept-card">
+          <h3>Round 1 → Round 2</h3>
+          <p>Round 1 established the problem framing, UAV justification, and a preliminary VTOL concept. Round 2 delivers a fully dimensioned airframe, justified hardware selection, closed mass/power/endurance calculations, a costed BOM, and constraint-by-constraint compliance proof.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DETECTION PIPELINE (signature) ============ -->
+  <section id="detection" class="section-pad">
+    <div class="wrap">
+      <div class="eyebrow">Innovation &amp; Originality</div>
+      <h2 class="section-title">Trusted before it's ever geotagged.</h2>
+      <p class="section-lede">Most reconnaissance drones stop at "here's footage." VARUNA cross-checks every RGB detection against a co-registered thermal signature before it's confirmed — rejecting debris, animals, and reflections onboard, in flight.</p>
+
+      <div class="detect-panel">
+        <div class="detect-grid">
+          <div class="detect-visual" id="detect-visual" role="img" aria-label="Animated diagram of RGB and thermal detection sweeping a flood scene and voting to confirm a survivor"></div>
+          <div class="detect-copy">
+            <h3>Two-sensor voting, onboard</h3>
+            <p>Every RGB-based candidate from <strong>YOLOv8</strong> is checked against a thermal signature in the <strong>28–38°C human range</strong> via the FLIR Boson 640, before it's ever written to the survivor list.</p>
+            <p>The vote runs entirely on the <strong>Jetson Orin Nano</strong> — no ground-station round trip, no manual review queue. Rescue teams get a list they can act on immediately, not one they have to verify first.</p>
+            <div class="vote-row">
+              <span class="vote-chip">RGB: candidate</span>
+              <span aria-hidden="true">+</span>
+              <span class="vote-chip">Thermal: 34.2°C</span>
+              <span aria-hidden="true">→</span>
+              <span class="vote-chip pass">CONFIRMED</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AIRFRAME / STRUCTURE ============ -->
+  <section id="airframe" class="section-pad">
+    <div class="wrap">
+      <div class="eyebrow">UAV Design &amp; Physical Viability</div>
+      <h2 class="section-title">Built for unprepared, debris-strewn terrain.</h2>
+      <p class="section-lede">A twin-boom EPP-foam/carbon-spar airframe, sized with margin at every load path — from hover thrust to hard-field landings.</p>
+
+      <div class="concept-cols">
+        <div class="concept-card">
+          <h3>Airframe</h3>
+          <p>Twin-boom EPP-foam/carbon-spar construction keeps structural mass to <strong style="color:var(--text-primary)">2.05 kg</strong> while withstanding repeated hard-field landings on skid gear. Centre of gravity holds within 2% of mean aerodynamic chord via a sliding battery tray — trimmable from vertical hover through 15 m/s fixed-wing cruise.</p>
+        </div>
+        <div class="concept-card">
+          <h3>Propulsion Sizing</h3>
+          <p>Hover: 6.4 kg MTOW → 62.8 N weight → 125.6 N total thrust at 2:1 target → 31.4 N per lift motor, sizing the KV380 + 13" prop. Cruise: 148 W draw at 15 m/s (L/D ≈ 13, η ≈ 0.75) — the basis for the 118-minute endurance figure.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SIMULATION ============ -->
+  <section class="section-pad">
+    <div class="wrap">
+      <div class="eyebrow">Structural &amp; Flight Simulations</div>
+      <h2 class="section-title">Verified before it's built.</h2>
+      <p class="section-lede">FEA and CFD confirm the highest-load joint and cruise aerodynamics hold well inside standard UAV safety margins.</p>
+
+      <div class="sim-grid">
+        <div class="sim-card">
+          <div class="tag">FEA — Boom-to-fuselage joint</div>
+          <h4>Structural Integrity</h4>
+          <p>Peak von Mises stress of ~140–150 MPa localized at the joint fillet under simulated hover load; surrounding spar structure stays below 50 MPa. Carbon-fiber spar (tensile yield ~600 MPa) gives roughly 4:1 safety factor at peak stress.</p>
+          <div class="sim-stats">
+            <div class="sim-stat"><div class="v">4:1</div><div class="l">SAFETY FACTOR</div></div>
+            <div class="sim-stat"><div class="v">150 MPa</div><div class="l">PEAK STRESS</div></div>
+            <div class="sim-stat"><div class="v">600 MPa</div><div class="l">SPAR YIELD</div></div>
+          </div>
+        </div>
+        <div class="sim-card">
+          <div class="tag">CFD — Cruise, 15 m/s, 3° incidence</div>
+          <h4>Flight Viability</h4>
+          <p>Smooth, attached flow across the wing's upper surface with local velocity rising to ~90–100 m/s at the leading edge — no visible separation or turbulent wake aft of the wing, across the mission-critical 64-minute grid-search sortie.</p>
+          <div class="sim-stats">
+            <div class="sim-stat"><div class="v">15 m/s</div><div class="l">CRUISE SPEED</div></div>
+            <div class="sim-stat"><div class="v">0</div><div class="l">FLOW SEPARATION</div></div>
+            <div class="sim-stat"><div class="v">64 min</div><div class="l">SORTIE DURATION</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ARCHITECTURE ============ -->
+  <section id="architecture" class="section-pad">
+    <div class="wrap">
+      <div class="eyebrow">System Components Architecture</div>
+      <h2 class="section-title">Five subsystems, one sortie.</h2>
+      <p class="section-lede">Every subsystem is chosen and sized against the same mission: 5 km², fully autonomous, survivors confirmed onboard.</p>
+
+      <div class="arch-grid" role="list">
+        <div class="arch-cell" role="listitem">
+          <div class="idx">01 / POWER &amp; PROPULSION</div>
+          <h4>Power &amp; Propulsion</h4>
+          <ul>
+            <li>6S 16,000 mAh Li-ion battery</li>
+            <li>4× lift motors (KV380)</li>
+            <li>1× pusher motor (KV450)</li>
+            <li>Power distribution board</li>
+          </ul>
+        </div>
+        <div class="arch-cell" role="listitem">
+          <div class="idx">02 / FLIGHT CORE</div>
+          <h4>Flight Core</h4>
+          <ul>
+            <li>Pixhawk 6C flight controller</li>
+            <li>Here3+ RTK GNSS</li>
+            <li>RFD900x telemetry radio</li>
+            <li>Redundant IMU / barometer / compass</li>
+          </ul>
+        </div>
+        <div class="arch-cell" role="listitem">
+          <div class="idx">03 / PERCEPTION &amp; AI</div>
+          <h4>Perception &amp; AI Compute</h4>
+          <ul>
+            <li>Jetson Orin Nano 8GB</li>
+            <li>Sony IMX477 RGB camera</li>
+            <li>FLIR Boson 640 thermal camera</li>
+            <li>Onboard YOLOv8 inference</li>
+          </ul>
+        </div>
+        <div class="arch-cell" role="listitem">
+          <div class="idx">04 / COMMS</div>
+          <h4>Comms</h4>
+          <ul>
+            <li>915 MHz MAVLink telemetry (primary)</li>
+            <li>4G/LTE backup relay for BVLOS</li>
+          </ul>
+        </div>
+        <div class="arch-cell" role="listitem">
+          <div class="idx">05 / GROUND SEGMENT</div>
+          <h4>Ground Segment</h4>
+          <ul>
+            <li>Mission Planner / QGroundControl</li>
+            <li>Mission upload &amp; live telemetry</li>
+          </ul>
+        </div>
+        <div class="arch-cell" role="listitem">
+          <div class="idx">06 / PAYLOAD INTEGRATION</div>
+          <h4>Payload Bay</h4>
+          <ul>
+            <li>2-axis gimbal, 120×90×80mm nose bay</li>
+            <li>Vibration-isolated from airframe</li>
+            <li>Jetson at fuselage CG with cooling shroud</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MISSION TIMELINE ============ -->
+  <section class="section-pad">
+    <div class="wrap">
+      <div class="eyebrow">Mission Planning &amp; Execution</div>
+      <h2 class="section-title">One unbroken autonomous sortie.</h2>
+      <p class="section-lede">ArduPilot AUTO mode executes the full grid pattern with zero manual input — detection and geotagging happen mid-flight, so partial intelligence reaches rescuers before the mission ends.</p>
+
+      <div class="timeline">
+        <div class="timeline-track">
+          <div class="t-item">
+            <span class="t-dot" aria-hidden="true"></span>
+            <div class="t-time">T+0 — T+2 MIN</div>
+            <div class="t-title">Vertical launch</div>
+            <div class="t-desc">RTK lock acquired, geofence uploaded, VTOL lift-off.</div>
+          </div>
+          <div class="t-item">
+            <span class="t-dot" aria-hidden="true"></span>
+            <div class="t-time">T+2 — T+3 MIN</div>
+            <div class="t-title">VTOL transition</div>
+            <div class="t-desc">Transition to fixed-wing cruise at 15 m/s.</div>
+          </div>
+          <div class="t-item">
+            <span class="t-dot" aria-hidden="true"></span>
+            <div class="t-time">T+3 — T+64 MIN</div>
+            <div class="t-title">Autonomous grid-search survey</div>
+            <div class="t-desc">150 m swath, 50% overlap, full 5 km² coverage. Confirmed survivor geotags stream live as they're detected.</div>
+          </div>
+          <div class="t-item">
+            <span class="t-dot" aria-hidden="true"></span>
+            <div class="t-time">T+64 MIN</div>
+            <div class="t-title">Precision RTK landing</div>
+            <div class="t-desc">Transition back to hover for controlled recovery.</div>
+          </div>
+          <div class="t-item">
+            <span class="t-dot" aria-hidden="true"></span>
+            <div class="t-time">T+75 MIN</div>
+            <div class="t-title">Mission report delivered</div>
+            <div class="t-desc">Post-flight processing complete: survivor list, Flood Extent Map, and Damage Assessment Report handed to rescue command.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LIVE TELEMETRY (signature, cont.) ============ -->
+  <section class="section-pad">
+    <div class="wrap">
+      <div class="eyebrow">Simulated Sortie Log</div>
+      <h2 class="section-title">What the ground segment sees.</h2>
+      <p class="section-lede">A representative telemetry trace from the T+3–64 min survey window, as detections resolve onboard.</p>
+      <div class="telemetry" role="log" aria-label="Simulated mission telemetry" id="telemetry"></div>
+    </div>
+  </section>
+
+  <!-- ============ CONSTRAINT COMPLIANCE ============ -->
+  <section id="compliance" class="section-pad">
+    <div class="wrap">
+      <div class="eyebrow">Zone-Specific Constraint Compliance</div>
+      <h2 class="section-title">Every Zone C requirement, closed.</h2>
+
+      <div class="constraint-list">
+        <div class="c-row">
+          <div class="c-req"><span class="c-num" aria-hidden="true">1</span><span class="c-req-text">Survey at least 5 km²</span></div>
+          <div class="c-sol">Autonomous grid-search plan covers <strong>5.0 km²</strong> using 50 km of transects at a 150 m swath — validated against 118-minute endurance vs. a 64-minute flight time.</div>
+        </div>
+        <div class="c-row">
+          <div class="c-req"><span class="c-num" aria-hidden="true">2</span><span class="c-req-text">Fly autonomously</span></div>
+          <div class="c-sol">ArduPilot AUTO mode on the <strong>Pixhawk 6C</strong> executes waypoint navigation, grid-search, obstacle avoidance, and Return-To-Launch with zero manual piloting input.</div>
+        </div>
+        <div class="c-row">
+          <div class="c-req"><span class="c-num" aria-hidden="true">3</span><span class="c-req-text">Detect 3+ survivors with geotagged coordinates</span></div>
+          <div class="c-sol">Onboard <strong>YOLOv8</strong> detections are cross-verified against thermal signatures via the FLIR Boson 640, then geotagged using RTK-GNSS position fused with gimbal angle.</div>
+        </div>
+        <div class="c-row">
+          <div class="c-req"><span class="c-num" aria-hidden="true">4</span><span class="c-req-text">Produce Flood Extent Map + Damage Assessment Report</span></div>
+          <div class="c-sol">Survey imagery becomes a georeferenced orthomosaic via SfM; NDWI-informed CNN segmentation produces the Flood Extent Map, and instance segmentation drives a 5-tier Damage Assessment Report.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COST / FEASIBILITY ============ -->
+  <section id="cost" class="section-pad" style="border-bottom:none;">
+    <div class="wrap">
+      <div class="eyebrow">Feasibility &amp; Cost Consideration</div>
+      <h2 class="section-title">Buildable today, not a paper design.</h2>
+      <p class="section-lede">Every component is off-the-shelf and commercially available. Mass, thrust, and endurance budgets all close with margin.</p>
+
+      <div class="cost-hero">
+        <div class="amount">₹2,01,000</div>
+        <div class="usd">≈ US$2,410 total prototype cost</div>
+      </div>
+
+      <table class="cost-table">
+        <caption class="skip-link" style="position:static;left:auto;top:auto;padding:0;background:none;color:var(--text-tertiary);font-family:var(--font-mono);font-size:11px;text-align:left;font-weight:400;margin-bottom:8px;display:block;">Cost-conscious substitutes vs. full-spec alternatives</caption>
+        <thead>
+          <tr><th scope="col">Component</th><th scope="col" style="text-align:right;">Cost</th><th scope="col">Note</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Jetson Orin Nano 8GB</td><td class="num">₹37,000</td><td class="note">Most affordable capable edge-AI option — kept, not substituted</td></tr>
+          <tr><td>InfiRay / Seek thermal module</td><td class="num">₹40,000</td><td class="note">In place of a high-end radiometric camera</td></tr>
+          <tr><td>Standard M8P GPS</td><td class="num">₹7,500</td><td class="note">In place of full RTK</td></tr>
+          <tr><td>Off-the-shelf VTOL airframe kit</td><td class="num">₹17,000</td><td class="note">Commercially available base platform</td></tr>
+        </tbody>
+      </table>
+
+      <div class="concept-cols" style="margin-top:40px;">
+        <div class="concept-card">
+          <h3>Physical Reality Check</h3>
+          <p>Mass budget closes with margin (6.4 kg MTOW vs. 7.5 kg limit), thrust-to-weight is 2.05:1, and endurance is computed from real battery energy density — every part is off-the-shelf.</p>
+        </div>
+        <div class="concept-card">
+          <h3>Scalability</h3>
+          <p>Unit cost drops further at volume through bulk procurement and injection-moulded tooling past 50 units. Path scales single prototype → 3–5 UAV multi-agent coordination → integration with state disaster-response GCS systems.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap footer-row">
+      <div class="footer-brand">VARUNA</div>
+      <div class="footer-meta">HackShastra · Zone C — Analysis &amp; Reconnaissance · Round 2</div>
+    </div>
+  </footer>
+
+</main>
+
+<script>
+  // ---------- Detection visual: animated grid scan + thermal vote ----------
+  (function(){
+    const el = document.getElementById('detect-visual');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 520 340');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.style.position = 'absolute';
+    svg.style.inset = '0';
+
+    svg.innerHTML = `
+      <defs>
+        <pattern id="terrainGrid" width="26" height="26" patternUnits="userSpaceOnUse">
+          <path d="M26 0H0V26" fill="none" stroke="#141c25" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="520" height="340" fill="#050708"/>
+      <rect width="520" height="340" fill="url(#terrainGrid)"/>
+      <path d="M0 210 Q 90 190 150 220 T 300 210 T 520 230 V340 H0 Z" fill="#0d1e2b" opacity="0.9"/>
+      <path d="M0 240 Q 100 225 190 245 T 400 240 T 520 255 V340 H0 Z" fill="#0f2634" opacity="0.9"/>
+      <circle cx="330" cy="188" r="7" fill="none" stroke="#ff6a3d" stroke-width="1.5" opacity="0.9"/>
+      <circle cx="330" cy="188" r="3" fill="#ff6a3d"/>
+      <rect x="0" y="0" width="520" height="26" fill="#2f6690" opacity="0.18" id="scanBar"/>
+      <text x="18" y="30" fill="#6badd6" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1">RGB + THERMAL SWEEP — 150m SWATH</text>
+      <g id="voteLabel" opacity="0">
+        <rect x="292" y="150" width="120" height="26" rx="4" fill="#0d131a" stroke="#3ddc84"/>
+        <text x="352" y="167" fill="#3ddc84" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle">CONFIRMED · 34.2°C</text>
+      </g>
+    `;
+    el.appendChild(svg);
+
+    if (reduce) {
+      svg.querySelector('#voteLabel').setAttribute('opacity', '1');
+      return;
+    }
+
+    const scanBar = svg.querySelector('#scanBar');
+    const voteLabel = svg.querySelector('#voteLabel');
+    let y = 0;
+    const speed = 1.1;
+
+    function frame(){
+      y += speed;
+      if (y > 340) y = 0;
+      scanBar.setAttribute('y', y - 26);
+
+      // trigger the confirm callout as the scan line crosses the target
+      if (y > 188 && y < 214) {
+        voteLabel.setAttribute('opacity', '1');
+      } else if (y > 260) {
+        voteLabel.setAttribute('opacity', '0');
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+
+  // ---------- Telemetry log ----------
+  (function(){
+    const container = document.getElementById('telemetry');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const entries = [
+      ['[T+03:12] GRID-SEARCH — leg 1/9 initiated, alt 120m AGL', 'dim'],
+      ['[T+03:12] RGB+THERMAL fusion pipeline — active', 'dim'],
+      ['[T+08:47] YOLOv8 candidate flagged — sector C4', 'warn'],
+      ['[T+08:48] thermal cross-check: 34.2°C — HUMAN RANGE', 'ok'],
+      ['[T+08:48] SURVIVOR_01 confirmed — geotag 26.8467°N, 80.9462°E', 'ok'],
+      ['[T+21:03] YOLOv8 candidate flagged — sector C7', 'warn'],
+      ['[T+21:04] thermal cross-check: 19.6°C — REJECTED (debris)', 'dim'],
+      ['[T+34:55] YOLOv8 candidate flagged — sector D2', 'warn'],
+      ['[T+34:56] thermal cross-check: 33.8°C — HUMAN RANGE', 'ok'],
+      ['[T+34:56] SURVIVOR_02 confirmed — geotag 26.8511°N, 80.9530°E', 'ok'],
+      ['[T+52:18] YOLOv8 candidate flagged — sector E1', 'warn'],
+      ['[T+52:19] thermal cross-check: 35.1°C — HUMAN RANGE', 'ok'],
+      ['[T+52:19] SURVIVOR_03 confirmed — geotag 26.8398°N, 80.9601°E', 'ok'],
+      ['[T+64:00] grid-search complete — 5.0 km² covered', 'dim'],
+      ['[T+64:00] transitioning to hover for RTK landing', 'dim'],
+      ['[T+75:00] mission report compiled — 3 confirmed survivors', 'ok']
+    ];
+
+    entries.forEach((entry, i) => {
+      const row = document.createElement('div');
+      row.className = 'line ' + entry[1];
+      row.textContent = entry[0];
+      row.style.animationDelay = reduce ? '0ms' : (i * 260) + 'ms';
+      container.appendChild(row);
+    });
+  })();
+</script>
+
+</body>
+</html>
